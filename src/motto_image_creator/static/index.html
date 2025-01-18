@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motto Image Creator</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2c3e50;
+            --background-color: #f5f6fa;
+            --text-color: #2c3e50;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            display: none;
+        }
+
+        .result.visible {
+            display: block;
+        }
+
+        .poem {
+            white-space: pre-wrap;
+            font-style: italic;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: white;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .image-container {
+            text-align: center;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .error {
+            color: #dc3545;
+            padding: 1rem;
+            background-color: #f8d7da;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .error.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Motto Image Creator</h1>
+        <form id="mottoForm">
+            <div class="form-group">
+                <label for="prompt">Enter your prompt:</label>
+                <input type="text" id="prompt" name="prompt" required
+                       placeholder="e.g., creating user-centric software applications">
+            </div>
+            <button type="submit" id="submitBtn">Generate Motto Image</button>
+        </form>
+
+        <div class="loading" id="loading">
+            Generating your motto image...
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <div class="poem" id="poemText"></div>
+            <div class="image-container">
+                <img id="mottoImage" alt="Generated motto image">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('mottoForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const poemText = document.getElementById('poemText');
+        const mottoImage = document.getElementById('mottoImage');
+        const error = document.getElementById('error');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset UI
+            result.classList.remove('visible');
+            error.classList.remove('visible');
+            loading.classList.add('visible');
+            submitBtn.disabled = true;
+
+            try {
+                const prompt = document.getElementById('prompt').value;
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate motto image');
+                }
+
+                const data = await response.json();
+                
+                // Update UI with results
+                poemText.textContent = data.poem;
+                mottoImage.src = data.image_path;
+                result.classList.add('visible');
+            } catch (err) {
+                error.textContent = err.message;
+                error.classList.add('visible');
+            } finally {
+                loading.classList.remove('visible');
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

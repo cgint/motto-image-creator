@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "motto-image-creator"
+version = "0.1.0"
+description = "A FastAPI service for creating motto images with AI-generated content"
+authors = []
+packages = [
+    { include = "motto_image_creator", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "3.11.*"
+fastapi = "*"
+uvicorn = "*"
+pillow = "*"
+google-generativeai = "*"
+google-cloud-aiplatform = "*"
+python-multipart = "*"
+pydantic = "*"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
