@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 from .api.routes import router
 from .services.vertex_image_service import init_vertex
-from .services.gemini_image_service import init_genai
+from .constants import output_dir
 
 app = FastAPI(
     title="Motto Image Creator",
@@ -27,15 +27,14 @@ static_path = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
 # Mount output directory for generated images
-output_path = Path("output")
-output_path.mkdir(exist_ok=True)
-app.mount("/output", StaticFiles(directory=str(output_path)), name="output")
+app.mount("/output", StaticFiles(directory=str(output_dir)), name="output")
 
 # Initialize Gemini AI on startup
 @app.on_event("startup")
 async def startup_event():
-    init_genai()
+    output_dir.mkdir(exist_ok=True)
     init_vertex()
+
 # Include routers
 app.include_router(router, prefix="/api")
 

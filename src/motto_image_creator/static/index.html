@@ -53,7 +53,7 @@
             font-weight: 600;
         }
 
-        input[type="text"] {
+        input[type="text"], textarea {
             width: 100%;
             padding: 0.8rem;
             border: 2px solid #ddd;
@@ -113,13 +113,6 @@
             text-align: center;
         }
 
-        .image-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-        }
-
         .loading {
             display: none;
             text-align: center;
@@ -149,23 +142,27 @@
         <h1>Motto Image Creator</h1>
         <form id="mottoForm">
             <div class="form-group">
-                <label for="prompt">Enter your prompt:</label>
-                <input type="text" id="prompt" name="prompt" required
-                       placeholder="e.g., creating user-centric software applications">
+                <h3>Enter either a prompt or a poem</h3>
+                <label for="input_prompt">1) Enter your prompt:</label>
+                <input type="text" id="input_prompt" name="input_prompt" required
+                       placeholder="e.g., creating user-centric software applications"
+                       value="Write a poem about creating user-centric software applications in 30 words">
+                <label for="input_poem">2) Or enter your own poem:</label>
+                <textarea id="input_poem" name="input_poem" rows="4" 
+                         placeholder=""></textarea>
             </div>
-            <button type="submit" id="submitBtn">Generate Motto Image</button>
+            <button type="submit" id="submitBtn">Generate Motto Images</button>
         </form>
 
         <div class="loading" id="loading">
-            Generating your motto image...
+            Generating your motto images...
         </div>
 
         <div class="error" id="error"></div>
 
         <div class="result" id="result">
             <div class="poem" id="poemText"></div>
-            <div class="image-container">
-                <img id="mottoImage" alt="Generated motto image">
+            <div class="result-image-container" id="resultImageContainer">
             </div>
         </div>
     </div>
@@ -175,8 +172,8 @@
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
         const result = document.getElementById('result');
+        const resultImageContainer = document.getElementById('resultImageContainer');
         const poemText = document.getElementById('poemText');
-        const mottoImage = document.getElementById('mottoImage');
         const error = document.getElementById('error');
 
         form.addEventListener('submit', async (e) => {
@@ -189,24 +186,36 @@
             submitBtn.disabled = true;
 
             try {
-                const prompt = document.getElementById('prompt').value;
+                const prompt = form.input_prompt.value.trim();
+                const poem = form.input_poem.value.trim();
+                
+                // Only send one of prompt or poem
+                const payload = poem ? { input: poem, type: 'poem' } : { input: prompt, type: 'prompt' };
+                
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ prompt }),
+                    body: JSON.stringify(payload),
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to generate motto image');
+                    throw new Error('Failed to generate motto image! Error Text: ' + await response.text());
                 }
 
                 const data = await response.json();
                 
                 // Update UI with results
                 poemText.textContent = data.poem;
-                mottoImage.src = data.image_path;
+
+                resultImageContainer.innerHTML = "";
+                for (const image_path of data.image_path_list) {
+                    const img = document.createElement('img');
+                    img.src = image_path;
+                    img.style.maxWidth = '100%';
+                    resultImageContainer.appendChild(img);
+                }
                 result.classList.add('visible');
             } catch (err) {
                 error.textContent = err.message;
